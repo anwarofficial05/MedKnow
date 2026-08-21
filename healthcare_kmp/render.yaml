@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: medknow-healthcare-portal
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --threads 4
+    plan: free
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_EXP_HOURS
+        value: "24"
+      - key: PYTHON_VERSION
+        value: 3.12.4

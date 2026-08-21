@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedKnow — Healthcare Knowledge Management Portal</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231F6F78'/><path d='M16 8v16M8 16h16' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'/></svg>">
+</head>
+<body>
+
+<!-- ============ HOSPITAL CLINICAL ADVISORY BROADCAST BANNER ============ -->
+<div id="advisory-banner" class="advisory-banner" style="display:none;">
+  <div class="advisory-content">
+    <span class="advisory-tag" id="advisory-tag">HOSPITAL ADVISORY</span>
+    <span class="advisory-title" id="advisory-title"></span>
+    <span class="advisory-msg" id="advisory-msg"></span>
+  </div>
+  <button class="advisory-close" onclick="dismissAdvisory()" title="Dismiss banner">✕</button>
+</div>
+
+<!-- ============ AUTH SCREEN ============ -->
+<div id="auth-screen" class="auth-wrap" style="display:none;">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#1F6F78"/><path d="M16 8v16M8 16h16" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>
+      <div>
+        <div style="font-family:var(--font-display); font-size:20px; font-weight:700; color:var(--ink);">MedKnow Portal</div>
+        <div style="font-family:var(--font-mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--slate);">Healthcare Knowledge Management</div>
+      </div>
+    </div>
+
+    <!-- INITIAL SYSTEM SETUP NOTICE (IF NO ADMIN YET) -->
+    <div id="first-user-banner" class="setup-notice" style="display:none;">
+      <div style="font-weight:700; font-size:13.5px; color:#0369A1; margin-bottom:4px;">✨ Initial Portal Setup</div>
+      <div style="font-size:12px; color:#0C4A6E;">Welcome! No accounts exist yet. Register below to create your <strong>Super Administrator</strong> profile.</div>
+    </div>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</div>
+      <div class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Create Account</div>
+    </div>
+
+    <div id="auth-error" class="error-msg" style="display:none;"></div>
+    <div id="auth-success" class="success-msg" style="display:none;"></div>
+
+    <!-- LOGIN FORM -->
+    <form id="login-form" onsubmit="return handleLogin(event)">
+      <div class="field">
+        <label>Email Address</label>
+        <input type="email" id="login-email" required placeholder="you@hospital.com" autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-password" required placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary" style="width:100%; justify-content:center; padding:11px;" type="submit">Sign In to Portal</button>
+    </form>
+
+    <!-- REGISTER FORM -->
+    <form id="register-form" onsubmit="return handleRegister(event)" style="display:none;">
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" id="reg-name" required placeholder="e.g. Dr. Jane Smith" autocomplete="name">
+      </div>
+      <div class="field">
+        <label>Email Address</label>
+        <input type="email" id="reg-email" required placeholder="you@hospital.com" autocomplete="email">
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label>Department / Specialty</label>
+          <input type="text" id="reg-department" placeholder="e.g. Internal Medicine, Emergency, ICU">
+        </div>
+        <div class="field">
+          <label>Clinical Title</label>
+          <input type="text" id="reg-title" placeholder="e.g. Senior Consultant, Head Nurse">
+        </div>
+      </div>
+      <div class="field" id="reg-role-container">
+        <label>Account Role</label>
+        <select id="reg-role">
+          <option value="contributor">Contributor (Physician / Specialist / Author)</option>
+          <option value="viewer">Viewer (Staff / Resident / Nurse)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="reg-password" required minlength="6" placeholder="Create a secure password (6+ chars)" autocomplete="new-password">
+      </div>
+      <button class="btn btn-primary" id="btn-reg-submit" style="width:100%; justify-content:center; padding:11px;" type="submit">Create My Profile</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============ APP SHELL ============ -->
+<div id="app" style="display:none;">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#1F6F78"/><path d="M16 8v16M8 16h16" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>
+      <div class="brand-name">MedKnow<small>Clinical KM Portal</small></div>
+      <button class="sidebar-close-btn" onclick="toggleSidebar(false)">✕</button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Clinical Workspace</div>
+      <button class="nav-item" data-view="dashboard" onclick="navigate('dashboard')">📊 &nbsp;Dashboard</button>
+      <button class="nav-item" data-view="browse" onclick="navigate('browse')">📚 &nbsp;Browse Knowledge</button>
+      <button class="nav-item" data-view="best" onclick="navigate('best')">⭐ &nbsp;Best Practices</button>
+      <button class="nav-item" data-view="bookmarks" onclick="navigate('bookmarks')">🔖 &nbsp;My Bookmarks</button>
+      <button class="nav-item" data-view="calculators" onclick="navigate('calculators')">🧮 &nbsp;Clinical Calculators</button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Collaboration & Practice</div>
+      <button class="nav-item" data-view="requests" onclick="navigate('requests')">🙋 &nbsp;Knowledge Requests</button>
+      <button class="nav-item" data-view="qa" onclick="navigate('qa')">💬 &nbsp;Clinical Q&A Consults</button>
+      <button class="nav-item" data-view="mine" onclick="navigate('mine')">📝 &nbsp;My Contributions</button>
+      <button class="nav-item" id="nav-review-queue" data-view="review-queue" onclick="navigate('review-queue')" style="display:none;">⚖️ &nbsp;Review Queue</button>
+      <button class="nav-item" id="nav-admin" data-view="admin" onclick="navigate('admin')" style="display:none;">⚙️ &nbsp;Admin Operations</button>
+    </div>
+
+    <div class="nav-group" id="category-nav">
+      <div class="nav-label">Clinical Categories</div>
+      <!-- populated by JS -->
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-chip" onclick="openProfileModal()" title="Edit My Profile">
+        <div class="user-avatar" id="user-avatar">A</div>
+        <div class="user-meta">
+          <div class="user-name" id="user-name">—</div>
+          <div class="user-role" id="user-role">—</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:6px; margin-top:8px;">
+        <button class="btn btn-ghost btn-sm" style="flex:1; justify-content:center; color:#CFDCD8; border-color:rgba(255,255,255,0.15);" onclick="openProfileModal()">Edit Profile</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1; justify-content:center; color:#E07A5F; border-color:rgba(255,255,255,0.15);" onclick="logout()">Sign Out</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="mobile-menu-btn" onclick="toggleSidebar(true)">☰</button>
+        <div>
+          <div class="page-title" id="page-title">Dashboard</div>
+          <div class="page-subtitle" id="page-subtitle">Hospital Clinical Knowledge Management</div>
+        </div>
+      </div>
+      <div id="topbar-actions" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;"></div>
+    </div>
+
+    <svg class="pulse-divider" viewBox="0 0 1000 22" preserveAspectRatio="none">
+      <path d="M0 11 H400 L420 11 L432 2 L448 20 L462 11 L480 11 L492 4 L505 18 L518 11 H1000"/>
+    </svg>
+    <div style="height:16px;"></div>
+
+    <!-- MAIN VIEW CONTAINER -->
+    <div id="view-root"><!-- populated by JS --></div>
+  </main>
+</div>
+
+<!-- ============ ARTICLE EDITOR MODAL ============ -->
+<div id="editor-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <h3 id="editor-title-text">New Clinical Protocol</h3>
+      <button class="icon-btn" onclick="closeEditor()">✕</button>
+    </div>
+    <div id="editor-error" class="error-msg" style="display:none;"></div>
+    
+    <form id="editor-form" onsubmit="return handleSaveArticle(event)">
+      <input type="hidden" id="edit-article-id">
+      
+      <div class="field">
+        <label>Protocol Title</label>
+        <input type="text" id="edit-title" required placeholder="e.g. Acute Sepsis Resuscitation Bundle">
+      </div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label>Category</label>
+          <select id="edit-category" required></select>
+        </div>
+        <div class="field">
+          <label>Evidence Level</label>
+          <select id="edit-evidence">
+            <option value="Level I">Level I: Systematic Review / Meta-analysis</option>
+            <option value="Level II" selected>Level II: Randomised Controlled Trial (RCT)</option>
+            <option value="Level III">Level III: Observational / Cohort Study</option>
+            <option value="Level IV">Level IV: Clinical Consensus / Expert Guidelines</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label>Target Audience</label>
+          <input type="text" id="edit-audience" placeholder="e.g. Emergency Physicians, ICU Nurses, Residents">
+        </div>
+        <div class="field">
+          <label>Clinical Urgency</label>
+          <select id="edit-urgency">
+            <option value="Routine">Routine Reference</option>
+            <option value="Important">Important Clinical Protocol</option>
+            <option value="Critical / Emergency">Critical / Emergency Protocol</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Clinical Summary (max 500 characters)</label>
+        <textarea id="edit-summary" rows="2" maxlength="500" placeholder="Brief high-yield summary for quick ward triage"></textarea>
+      </div>
+
+      <!-- EDITOR TABS: WRITE vs PREVIEW -->
+      <div class="editor-tabs">
+        <div class="editor-tab active" id="tab-write" onclick="switchEditorTab('write')">✏️ Edit Content</div>
+        <div class="editor-tab" id="tab-preview" onclick="switchEditorTab('preview')">👁️ Live Preview</div>
+      </div>
+
+      <div id="editor-write-pane">
+        <div class="field">
+          <label>Clinical Content & Algorithm (Markdown supported with Callouts)</label>
+          <div class="md-helpers">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="insertMd('## ')">Heading</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="insertMd('- [ ] ')">Checklist</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="insertMd('> [!CRITICAL] Immediate Action\n')">Critical Alert</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="insertMd('> [!WARNING] Caution\n')">Warning</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="insertMd('> [!NOTE] Clinical Pearl\n')">Note</button>
+          </div>
+          <textarea id="edit-content" rows="12" required placeholder="Use ## Headings, - Bullets, - [ ] Checklists, and > [!CRITICAL] / > [!WARNING] alerts."></textarea>
+        </div>
+      </div>
+
+      <div id="editor-preview-pane" class="preview-box" style="display:none;"></div>
+
+      <div class="field">
+        <label>Clinical Tags (comma separated)</label>
+        <input type="text" id="edit-tags" placeholder="e.g. sepsis, resuscitation, critical-care, er">
+      </div>
+
+      <div class="field">
+        <label>Key References & Clinical Guidelines</label>
+        <input type="text" id="edit-refs" placeholder="e.g. Surviving Sepsis Campaign Guidelines 2021; JAMA 2016.">
+      </div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label>Publication Status</label>
+          <select id="edit-status">
+            <option value="published">Publish Live (Approved)</option>
+            <option value="in_review">Submit for Peer Review</option>
+            <option value="draft">Save as Personal Draft</option>
+          </select>
+        </div>
+        <div class="field" id="edit-change-note-field" style="display:none;">
+          <label>Audit Trail Change Note</label>
+          <input type="text" id="edit-change-note" placeholder="Clinical reason for this revision">
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:14px;">
+        <button type="button" class="btn btn-ghost" onclick="closeEditor()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save & Register Asset</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ VERSION DIFF VIEWER MODAL ============ -->
+<div id="diff-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <div>
+        <h3 id="diff-modal-title">Version Audit & Diff Comparison</h3>
+        <small style="color:var(--slate);" id="diff-modal-meta"></small>
+      </div>
+      <button class="icon-btn" onclick="closeDiffModal()">✕</button>
+    </div>
+    <div id="diff-content" class="diff-container"></div>
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+      <button class="btn btn-ghost" onclick="closeDiffModal()">Close</button>
+      <button class="btn btn-primary" id="btn-restore-version" onclick="restoreSelectedVersion()">↺ Restore This Snapshot</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CLINICAL PRINT / EXPORT SHEET MODAL ============ -->
+<div id="print-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal modal-lg">
+    <div class="modal-head no-print">
+      <h3>Ward Protocol Print Sheet</h3>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print Protocol</button>
+        <button class="icon-btn" onclick="closePrintModal()">✕</button>
+      </div>
+    </div>
+    <div id="print-sheet-content" class="print-protocol-sheet"></div>
+  </div>
+</div>
+
+<!-- ============ KNOWLEDGE REQUEST MODAL ============ -->
+<div id="request-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Request Clinical Protocol / Guideline</h3>
+      <button class="icon-btn" onclick="closeRequestModal()">✕</button>
+    </div>
+    <form onsubmit="return handleCreateRequest(event)">
+      <div class="field">
+        <label>Protocol Topic / Question</label>
+        <input type="text" id="req-title" required placeholder="e.g. Pediatric Status Epilepticus Flowchart">
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <label>Department</label>
+          <input type="text" id="req-dept" placeholder="e.g. Emergency & Pediatrics">
+        </div>
+        <div class="field">
+          <label>Urgency Level</label>
+          <select id="req-urgency">
+            <option value="Routine">Routine</option>
+            <option value="Important" selected>Important</option>
+            <option value="Critical / Emergency">Critical / Emergency</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Clinical Need / Description</label>
+        <textarea id="req-desc" rows="4" required placeholder="Describe what clinical knowledge gap or guideline is needed for ward practice..."></textarea>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
+        <button type="button" class="btn btn-ghost" onclick="closeRequestModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Submit Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ CLINICAL Q&A QUESTION MODAL ============ -->
+<div id="qa-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Ask Clinical Consult / Practice Question</h3>
+      <button class="icon-btn" onclick="closeQaModal()">✕</button>
+    </div>
+    <form onsubmit="return handleCreateQuestion(event)">
+      <div class="field">
+        <label>Question Summary</label>
+        <input type="text" id="qa-title" required placeholder="e.g. Antibiotic duration for uncomplicated CAP in elderly patients?">
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <select id="qa-category" required></select>
+      </div>
+      <div class="field">
+        <label>Details & Clinical Context</label>
+        <textarea id="qa-content" rows="4" required placeholder="Provide clinical details, current guidelines referenced, or specific patient scenario..."></textarea>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
+        <button type="button" class="btn btn-ghost" onclick="closeQaModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Post Question</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ USER PROFILE MODAL ============ -->
+<div id="profile-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>My Staff Profile</h3>
+      <button class="icon-btn" onclick="closeProfileModal()">✕</button>
+    </div>
+    <form onsubmit="return handleUpdateProfile(event)">
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" id="prof-name" required>
+      </div>
+      <div class="field">
+        <label>Department</label>
+        <input type="text" id="prof-dept" placeholder="e.g. Cardiology, Emergency, ICU">
+      </div>
+      <div class="field">
+        <label>Clinical Title</label>
+        <input type="text" id="prof-title" placeholder="e.g. Chief Medical Officer, Consultant, Lead Nurse">
+      </div>
+      <div class="field">
+        <label>Avatar Color</label>
+        <select id="prof-color">
+          <option value="#1F6F78">Teal</option>
+          <option value="#132A31">Midnight Blue</option>
+          <option value="#7FA98E">Sage Green</option>
+          <option value="#C97A2B">Amber</option>
+          <option value="#C1503F">Coral Red</option>
+          <option value="#8060B8">Purple</option>
+          <option value="#3C6E9A">Navy Blue</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Change Password (leave blank to keep current)</label>
+        <input type="password" id="prof-pwd" placeholder="New password (6+ chars)">
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
+        <button type="button" class="btn btn-ghost" onclick="closeProfileModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Profile</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ TOAST NOTIFICATIONS ============ -->
+<div id="toast-container" class="toast-container"></div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
