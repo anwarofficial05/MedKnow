@@ -2,7 +2,6 @@ services:
   - type: web
     name: medknow-healthcare-portal
     runtime: python
-    rootDir: healthcare_kmp
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --threads 4
     plan: free
